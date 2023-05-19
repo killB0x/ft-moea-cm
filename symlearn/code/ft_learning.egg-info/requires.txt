@@ -1,0 +1,6 @@
+pandas
+numpy
+sympy
+pyeda
+scipy
+sortedcontainers

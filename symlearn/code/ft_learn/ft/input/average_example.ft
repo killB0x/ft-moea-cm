@@ -1,0 +1,1 @@
+AND(OR(AND(BE1, BE2), BE3), AND(BE4, BE5))

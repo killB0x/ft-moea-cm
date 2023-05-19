@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: ft-learning
+Version: 0.2
+Summary: ft_learning - Learning Fault Trees from Data
+Author: L.A. Jimenez-Roa, M. Volk
+Author-email: m.volk@utwente.nl
+Maintainer: M. Volk
+Maintainer-email: m.volk@utwente.nl
+Requires-Python: >=3

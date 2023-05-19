@@ -1,0 +1,4 @@
+#!/Users/nicolaerusnac/Documents/genetic_fault_tree/ft-moea/venv/bin/python3
+# EASY-INSTALL-SCRIPT: 'pyeda==0.28.0','espresso'
+__requires__ = 'pyeda==0.28.0'
+__import__('pkg_resources').run_script('pyeda==0.28.0', 'espresso')
