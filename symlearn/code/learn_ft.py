@@ -60,11 +60,11 @@ class Config:
         # Probability to perform each genetic operation
         self.probs_config = GenOpConfig(default_prob=1.0)
         # Population size
-        self.population = 500
+        self.population = 400
         # Maximum number of generations
         self.max_generations = 100
         # Stop after not changing in generations
-        self.unchanged_generations = 7
+        self.unchanged_generations = 20
         # Multi-objective function: [phi_c (Accuracy MCS), phi_s (Size), phi_d (Accuracy data)]
         self.obj_functions = [1, 1, 1, 0]
         # Selection strategy
