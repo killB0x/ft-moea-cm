@@ -11,6 +11,12 @@ class FaultTree:
     """
     Simple representation of fault trees.
     """
+    TP = None
+    FP = None
+    TN = None
+    FN = None
+    P = None
+    N = None
 
     def __init__(self, top_event, name=""):
         """
@@ -264,6 +270,156 @@ class FaultTree:
         while changed:
             changed = iter_simplify(self.top_event)
     
+    def phi_prec(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return 1 - (self.TP ) / (self.TP + self.FP)
+    
+    def phi_spec(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return 1 - (self.TN ) / (self.TN + self.FP)
+
+    
+    def phi_sens(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return 1 - (self.TP ) / (self.TP + self.FN)
+    
+    def phi_npv(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return 1 - (self.TN ) / (self.TN + self.FN)
+    
+    def phi_fnr(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return (self.FN) / (self.P)
+    
+    def phi_fpr(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return (self.FP) / (self.N)
+    
+    def phi_fdr(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return (self.FP) / (self.FP + self.TP)
+    
+    def phi_for(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return (self.FN) / (self.FN + self.TN)
+    
+    def phi_acc(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return 1 - (self.TP + self.TN) / (self.P + self.N) 
+
+    def phi_im(self, dataset):
+        total_T_dataset = sum(row['T'] for row in dataset)
+        total_T_ft = 0
+        impact_dataset = {}
+        impact_ft = {}
+        impact_diff = 0
+        for data in dataset[0]:
+            impact_dataset.update({data: 0})
+            impact_ft.update({data: 0})
+        for data in dataset:
+            ft_TE = self.evaluate(data)
+            total_T_ft += ft_TE
+            for key in data:
+                if key == "T":
+                    break
+                if data[key] == 1:
+                    impact_dataset[key] += data['T']
+                    impact_ft[key] += ft_TE
+        v1 = 0
+        mag_ds = 0
+        v2 = 0
+        mag_ft = 0
+        for key in dataset[0]:
+            if key == "T":
+                break
+            impact_dataset[key] = 2 * (2 * impact_dataset[key] - total_T_dataset) / len(dataset)
+            mag_ds += impact_dataset[key] * impact_dataset[key]
+            impact_ft[key] = 2 * (2 * impact_ft[key] - total_T_ft) / len(dataset)
+            mag_ft += impact_ft[key] * impact_ft[key]
+
+        mag_ds = math.sqrt(mag_ds)
+        mag_ft = math.sqrt(mag_ft)
+
+        for key in dataset[0]:
+            if key == "T":
+                break
+            impact_diff += abs((impact_dataset[key]/ mag_ds - impact_ft[key] / mag_ft)*(impact_dataset[key]/ mag_ds - impact_ft[key] / mag_ft))
+        
+        impact_diff = math.sqrt(impact_diff)
+        return impact_diff
+
+
+    def compute_confusion_matrix_attributes(self, dataset):
+        TP = 0
+        FP = 0
+        TN = 0
+        FN = 0
+        P = 0
+        N = 0
+        for data in dataset:
+            evaluatedValue = self.evaluate(data)
+            if (data['T'] == 0):
+                N += 1
+                if(evaluatedValue == 0):
+                    TN += 1
+                if(evaluatedValue == 1):
+                    FN += 1
+            
+            if (data['T'] == 1):
+                P += 1
+                if(evaluatedValue == 0):
+                    FP += 1
+                if(evaluatedValue == 1):
+                    TP += 1
+                    
+        self.TP = TP
+        self.FP = FP
+        self.TN = TN
+        self.FN = FN
+        self.P = P
+        self.N = N
+
+    def phi_r(self,dataset,seg_sz=4):
+        shuffled_dataset = np.copy(dataset)
+        # np.random.shuffle(shuffled_dataset)
+        segment_count = 0
+        segment_count_true = 0
+        total_counts = 0
+        total_counts_true = 0
+        for data in shuffled_dataset:
+            if (segment_count == seg_sz):
+                if (segment_count_true == seg_sz):
+                    total_counts_true += 1
+                total_counts += 1
+                segment_count = 0
+                segment_count_true = 0
+            if data['T'] == self.evaluate(data):
+                segment_count_true += 1
+            segment_count += 1
+        if (segment_count == seg_sz):
+            if (segment_count_true == seg_sz):
+                total_counts_true += 1
+            total_counts += 1
+            segment_count = 0
+        return 1 - total_counts_true / (total_counts)
 
     def phi_d(self,dataset):
         count_true = 0
