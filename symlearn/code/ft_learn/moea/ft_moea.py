@@ -155,7 +155,7 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
         objectives = [i for i in range(len(multi_objective_function)) if multi_objective_function[i] != 0]
         conv += 1
         for objective_type in objectives:
-            if (dict_iterations[-2][objective_type + 5] != dict_iterations[-1][objective_type + 5]):
+            if (dict_iterations[-2][objective_type + 13] != dict_iterations[-1][objective_type + 13]):
                 conv = 0       
         if conv >= convergence_criterion-1: #or ( dict_iterations[-1][4] == 1.0 and dict_iterations[-1][6] == 1.0 ):
             print('... FT-MOEA finalized ...')
