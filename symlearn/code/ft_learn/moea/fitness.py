@@ -112,16 +112,17 @@ def compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_
         tree_size = np.array(tree_size)
     else:
         tree_size = np.ones((len(initial_population),2))*-1
-        
+    
     #Compute accuracy based on the dataset:
     if multi_objective_function[2] != 0:
         acc_data = []
         for ft in initial_population:
+            #start_point_time = time.time()
             acc_data.append([ft.phi_d(dataset)])
+            #print("Calculated confusion matrix for ft in", time.time() - start_point_time, "seconds")
         acc_data = np.array(acc_data)
     else:
         acc_data = np.ones((len(initial_population),2))*-1
-   
     if multi_objective_function[3] != 0:
         rand_seg_acc = []
         for ft in initial_population:
@@ -130,7 +131,71 @@ def compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_
     else:
         rand_seg_acc = np.ones((len(initial_population),2))*-1
 
-    fitnesses = np.column_stack((acc_mcs[:,0],tree_size[:,0],acc_data[:,0], rand_seg_acc[:,0]))
+    if multi_objective_function[4] != 0:
+        im_data = []
+        for ft in initial_population:
+            im_data.append([ft.phi_im(dataset)])
+        im_data = np.array(im_data)
+    else:
+        im_data = np.ones((len(initial_population),2))*-1
+
+    if multi_objective_function[5] != 0:
+        prec_data = []
+        for ft in initial_population:
+            prec_data.append([ft.phi_prec(dataset)])
+        prec_data = np.array(prec_data)
+    else:
+        prec_data = np.ones((len(initial_population),2))*-1
+
+    if multi_objective_function[6] != 0:
+        spec_data = []
+        for ft in initial_population:
+            spec_data.append([ft.phi_spec(dataset)])
+        spec_data = np.array(spec_data)
+    else:
+        spec_data = np.ones((len(initial_population),2))*-1
+
+    if multi_objective_function[7] != 0:
+        sens_data = []
+        for ft in initial_population:
+            sens_data.append([ft.phi_sens(dataset)])
+        sens_data = np.array(sens_data)
+    else:
+        sens_data = np.ones((len(initial_population),2))*-1
+
+    if multi_objective_function[8] != 0:
+        npv_data = []
+        for ft in initial_population:
+            npv_data.append([ft.phi_npv(dataset)])
+        npv_data = np.array(npv_data)
+    else:
+        npv_data = np.ones((len(initial_population),2))*-1
+    
+    if multi_objective_function[9] != 0:
+        fnr_data = []
+        for ft in initial_population:
+            fnr_data.append([ft.phi_fnr(dataset)])
+        fnr_data = np.array(fnr_data)
+    else:
+        fnr_data = np.ones((len(initial_population),2))*-1
+
+    if multi_objective_function[10] != 0:
+        fpr_data = []
+        for ft in initial_population:
+            fpr_data.append([ft.phi_fpr(dataset)])
+        fpr_data = np.array(fpr_data)
+    else:
+        fpr_data = np.ones((len(initial_population),2))*-1
+    
+    if multi_objective_function[11] != 0:
+        acc_single_data = []
+        for ft in initial_population:
+            acc_single_data.append([ft.phi_acc(dataset)])
+        acc_single_data = np.array(acc_single_data)
+    else:
+        acc_single_data = np.ones((len(initial_population),2))*-1
+
+    fitnesses = np.column_stack((acc_mcs[:,0],tree_size[:,0],acc_data[:,0], rand_seg_acc[:,0], im_data[:, 0], prec_data[:, 0], spec_data[:, 0], sens_data[:, 0], npv_data[:, 0], fnr_data[:, 0], fpr_data[:, 0], acc_single_data[:, 0]))
     for ft,fi1 in zip(initial_population,fitnesses):
         fitness_dict[str(ft)]  = fi1
     
@@ -138,11 +203,11 @@ def compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_
 
 
 # %% Fitness function
-def cost_function(initial_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function):
+def cost_function(initial_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function, seg_size=4):
     
     
     # Compute the metrics from the FTs
-    fitnesses,fitness_dict = compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes)
+    fitnesses,fitness_dict = compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size)
 
     # ------------------------------------------------
     # Pareto efficiency:
