@@ -224,10 +224,7 @@ def cost_function(initial_population, dataset, bes, population_size, ft_from_MCS
     f=[]
     for i in pt:
         if len(i)>1:
-            if (multi_objective_function[3] != 0):
-                nds = [0.5 * fitnesses[i,0] + 0.25 * fitnesses[i,2] +  0.25 * fitnesses[i,3]][0].argsort()
-            else:
-                nds = [0.5 * fitnesses[i,0] + 0.5* fitnesses[i,2]][0].argsort()
+            nds = [fitnesses[i,0] + fitnesses[i,2] + fitnesses[i,11]][0].argsort()
             f.append(np.array(i)[nds].tolist())
         else:
             f.append(i)
