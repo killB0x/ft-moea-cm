@@ -37,8 +37,8 @@ def upfold(saving_folder):
 
 
 
-def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_as_input='', generations=100, convergence_criterion=10, multi_objective_function=[1, 0, 1, 1],
-                           config_gen_op=None, selection_strategy='elitist', saving_results_=0, path_save_results="", debugging=False):
+def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_as_input='', generations=100, convergence_criterion=10, multi_objective_function=[1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                           config_gen_op=None, selection_strategy='elitist', saving_results_=0, path_save_results="", debugging=False, seg_size=4):
     """
     Learns a FT consistent with a given dataset, using genetic operations.
     :param dataset: Matrix containing all cut sets.
@@ -114,7 +114,7 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
 
     t.append(time.time())
     print("start fitness function")
-    raw_fts = fitness.cost_function(initial_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function)
+    raw_fts = fitness.cost_function(initial_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function, seg_size)
 
     # sortedPeople,fitnesses,fitness_dict
 

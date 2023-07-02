@@ -66,13 +66,14 @@ class Config:
         # Stop after not changing in generations
         self.unchanged_generations = 20
         # Multi-objective function: [phi_c (Accuracy MCS), phi_s (Size), phi_d (Accuracy data)]
-        self.obj_functions = [1, 1, 1, 0]
+        self.obj_functions = [1,1,1,0,0,0,0,0,0,0,0,0]
         # Selection strategy
         self.selection_strategy = 'elitist'
         # Saving folder
         self.saving_folder = ""
         # Initial parent FT:
         self.ft_as_input = ''
+        self.seg_size = 4
 
 
 def log_debug(string, recurse_level):
@@ -133,7 +134,7 @@ def learn_new_fault_tree(mcss, bes, all_bes, config, results, dataset_evaluation
                                            generations=config.max_generations, convergence_criterion=config.unchanged_generations, multi_objective_function=config.obj_functions,
                                            config_gen_op=config.probs_config, selection_strategy=config.selection_strategy, debugging=config.debug,
                                            path_save_results=config.saving_folder,
-                                           ft_as_input=config.ft_as_input)
+                                           ft_as_input=config.ft_as_input, seg_size=config.seg_size)
         ft = fts[-1]
     elif config.learn_approach == LearnApproach.SYMPY:
         log_debug("Learn FT via sympy for module {}".format(CutSet(bes.keys()).to_string(bes)), recurse_level)
@@ -396,6 +397,8 @@ if __name__ == "__main__":
     parser.add_argument('--result-dir', '-r', type=str, help='Directory to write the results into as matlab files.')
     parser.add_argument('--verbose', '-v', help='Enable verbose output', action='store_true')
     parser.add_argument('--debug', '-d', help='Enable debugging', action='store_true')
+    parser.add_argument('--segment-size', '-sz',type=int, help='Set segment size for random segmentation', default='4')
+    parser.add_argument('--metric-config','-mc', type=str, help='Set metric configuration', default="111000000000")
 
     args = parser.parse_args()
 
@@ -409,6 +412,9 @@ if __name__ == "__main__":
     config.use_symmetries = not args.disable_symmetries
     config.use_modules = not args.disable_modules
     config.use_recursion = not args.disable_recursion
+    config.seg_size = args.segment_size
+    config.obj_functions = [int(char) for char in args.metric_config]
+    print(config.seg_size, config.obj_functions)
 
     # Set directory for results
     filename, file_extension = os.path.splitext(os.path.basename(args.file))

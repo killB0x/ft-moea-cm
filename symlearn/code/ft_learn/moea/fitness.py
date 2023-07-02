@@ -88,7 +88,7 @@ def fitness_cutsets(ft1, cs_base, bes):
 
 
 #%% Compute metrics
-def compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes):
+def compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size=4):
     
     #show us initial population
     fitnesses = []
@@ -125,7 +125,7 @@ def compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_
     if multi_objective_function[3] != 0:
         rand_seg_acc = []
         for ft in initial_population:
-            rand_seg_acc.append([ft.phi_r(dataset)])
+            rand_seg_acc.append([ft.phi_r(dataset, seg_size)])
         rand_seg_acc = np.array(rand_seg_acc)
     else:
         rand_seg_acc = np.ones((len(initial_population),2))*-1
