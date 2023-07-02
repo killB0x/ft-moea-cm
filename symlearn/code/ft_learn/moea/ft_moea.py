@@ -113,6 +113,7 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
         initial_population = genetic_operators.apply_genetic_operators(initial_population, basic_events, config_gen_op, debugging)
 
     t.append(time.time())
+    start_t = time.time()
     print("start fitness function")
     raw_fts = fitness.cost_function(initial_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function, seg_size)
 
@@ -123,14 +124,14 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
         save_results(raw_fts,t[-1]-t[0],path_save_results,dataset,ft_from_MCSs,multi_objective_function)
 
     print('Gen. \t Fitness Pop.             \t Fitness best \t                   Best individual')
-    print('0','\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),', ϕ_d=',"{:.4f}".format(np.mean(raw_fts[1][:,2])),', ϕ_r=',"{:.4f}".format(np.mean(raw_fts[1][:,3])),'\t /  ϕ_c=',"{:.4f}".format(raw_fts[1][-1,0]),', ϕ_d=',"{:.4f}".format(raw_fts[1][-1,2]),', ϕ_r=',"{:.4f}".format(raw_fts[1][-1,3]),', ϕ_s=',"{:.2f}".format(raw_fts[1][-1,1]),'\t',raw_fts[0][-1])
+    print('0','\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),', ϕ_d=',"{:.4f}".format(np.mean(raw_fts[1][:,2])),', ϕ_r=',"{:.4f}".format(np.mean(raw_fts[1][:,3])),', ϕ_im=',"{:.4f}".format(np.mean(raw_fts[1][:,4])),'\t /  ϕ_c=',"{:.4f}".format(raw_fts[1][-1,0]),', ϕ_acc=',"{:.4f}".format(np.mean(raw_fts[1][-1,11])),', ϕ_d=',"{:.4f}".format(raw_fts[1][-1,2]),', ϕ_r=',"{:.4f}".format(raw_fts[1][-1,3]),', ϕ_im=',"{:.4f}".format(raw_fts[1][-1,4]),', ϕ_prec=',"{:.2f}".format(raw_fts[1][-1,5]), ', ϕ_spec=',"{:.4f}".format(raw_fts[1][-1,6]), ', ϕ_sens=',"{:.4f}".format(raw_fts[1][-1,7]),', ϕ_npv=',"{:.4f}".format(raw_fts[1][-1,8]),', ϕ_fnr=',"{:.4f}".format(raw_fts[1][-1,9]),', ϕ_fpr=',"{:.4f}".format(raw_fts[1][-1,10]), ', ϕ_s=',"{:.2f}".format(raw_fts[1][-1,1]),'elapsed_time=',"{:.2f}".format(time.time()-start_t),'\t',raw_fts[0][-1])
 
     dict_iterations.append([str(raw_fts[0][-1])] + np.mean(raw_fts[1], axis=0).tolist() + raw_fts[1][-1].tolist())
     population = raw_fts[0]
     conv = 0
 
     for i in range(1, generations):
-
+        start_t = time.time()
         t.append(time.time())
         st = 0
 
@@ -146,7 +147,7 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
             save_results(raw_fts,t[-1]-t[0],path_save_results,dataset,ft_from_MCSs,multi_objective_function)
         
         dict_iterations.append([str(raw_fts[0][-1])] + np.mean(raw_fts[1],axis=0).tolist() + raw_fts[1][-1].tolist()  )
-        print(str(i),'\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),', ϕ_d=',"{:.4f}".format(np.mean(raw_fts[1][:,2])),', ϕ_r=',"{:.4f}".format(np.mean(raw_fts[1][:,3])),'\t /  ϕ_c=',"{:.4f}".format(raw_fts[1][-1,0]),', ϕ_d=',"{:.4f}".format(raw_fts[1][-1,2]),', ϕ_r=',"{:.4f}".format(raw_fts[1][-1,3]),', ϕ_s=',"{:.2f}".format(raw_fts[1][-1,1]),'\t',raw_fts[0][-1])
+        print(str(i),'\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),', ϕ_d=',"{:.4f}".format(np.mean(raw_fts[1][:,2])),', ϕ_r=',"{:.4f}".format(np.mean(raw_fts[1][:,3])),', ϕ_im=',"{:.4f}".format(np.mean(raw_fts[1][:,4])),'\t /  ϕ_c=',"{:.4f}".format(raw_fts[1][-1,0]),', ϕ_acc=',"{:.4f}".format(np.mean(raw_fts[1][-1,11])),', ϕ_d=',"{:.4f}".format(raw_fts[1][-1,2]),', ϕ_r=',"{:.4f}".format(raw_fts[1][-1,3]),', ϕ_im=',"{:.4f}".format(raw_fts[1][-1,4]), ', ϕ_prec=',"{:.4f}".format(raw_fts[1][-1,5]), ', ϕ_spec=',"{:.4f}".format(raw_fts[1][-1,6]),', ϕ_sens=',"{:.4f}".format(raw_fts[1][-1,7]),', ϕ_npv=',"{:.4f}".format(raw_fts[1][-1,8]),', ϕ_fnr=',"{:.4f}".format(raw_fts[1][-1,9]),', ϕ_fpr=',"{:.4f}".format(raw_fts[1][-1,10]), ', ϕ_s=',"{:.2f}".format(raw_fts[1][-1,1]),'elapsed_time=',"{:.2f}".format(time.time()-start_t),'\t',raw_fts[0][-1])
 
         # ------------------------------
         # Convergence criteria:
