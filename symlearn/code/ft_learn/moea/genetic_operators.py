@@ -5,7 +5,8 @@ import string
 
 from ft_learn.ft.ft_elements import AND, OR
 import ft_learn.helper as helper
-
+import multiprocessing
+from multiprocessing import Pool
 
 def generate_name():
     """
@@ -334,7 +335,7 @@ class GenOpConfig:
         self.p_cross_over = default_prob
 
 
-def apply_genetic_operators(population, all_bes, prob_config, deterministic=False):
+def apply_genetic_operators1(population, all_bes, prob_config, deterministic=False):
     """
     Apply genetic operators on fault-tree population.
     :param population: Population of fault tree.
@@ -378,4 +379,44 @@ def apply_genetic_operators(population, all_bes, prob_config, deterministic=Fals
     if assert_errors > 0:
         logging.debug("Encountered {} assertion errors".format(assert_errors))
 
+    return new_population
+
+def operate_on_ft(ft, population, all_bes, prob_config, deterministic=False):
+    actions = [create_be, connect_be, disconnect_be, delete_be, move_be, create_gate, change_gate_type, delete_gate, cross_over]
+    new_population = [ft]
+    assert_errors = 0
+
+    for action in actions:
+        prob_action = getattr(prob_config, "p_{}".format(action.__name__))
+        try:
+            if action == cross_over:
+                new_ft, new_ft_2 = action(ft, random.choice(population), prob_action, deterministic)
+                if not helper.check_empty_objects(new_ft_2):
+                    if new_ft_2 not in new_population:
+                        new_population.append(new_ft_2)
+            elif action == create_be:
+                new_ft = action(ft, all_bes, prob_action, deterministic)
+            else:
+                new_ft = action(ft, prob_action, deterministic)
+        except AssertionError:
+            assert_errors += 1
+            new_ft = None
+
+        if new_ft and not helper.check_empty_objects(new_ft):
+                new_population.append(new_ft)
+
+    return new_population, assert_errors
+
+def apply_genetic_operators(population, all_bes, prob_config, deterministic=False):
+    with Pool() as p:
+        results = p.starmap(operate_on_ft, [(ft, population, all_bes, prob_config, deterministic) for ft in population])
+
+    new_population = []
+    total_assert_errors = 0
+    for result in results:
+        new_population.extend(result[0])
+        total_assert_errors += result[1]
+    new_population = list(set(new_population))
+    if total_assert_errors > 0:
+        logging.debug("Encountered {} assertion errors".format(total_assert_errors))
     return new_population

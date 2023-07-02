@@ -5,7 +5,8 @@ import itertools
 
 import ft_learn.helper as helper
 from ft_learn.ft.ft_elements import BE, AND, OR
-
+import multiprocessing
+from multiprocessing import Pool
 
 def get_gate_statistics(ft):  # Marijn
     result = []
@@ -86,9 +87,36 @@ def fitness_cutsets(ft1, cs_base, bes):
 
     return c_cos_coef
 
+def compute_fitness(ft, multi_objective_function, dataset, ft_from_MCSs, bes, seg_size):
+    metrics = []
+    
+    metrics_funcs = [ft.phi_c, ft.phi_s, ft.phi_d, ft.phi_r, ft.phi_im, ft.phi_prec, ft.phi_spec, ft.phi_sens, ft.phi_npv, ft.phi_fnr, ft.phi_fpr, ft.phi_acc]
+    for i, func in enumerate(metrics_funcs):
+        if multi_objective_function[i] != 0:
+            if func == ft.phi_c:
+                metrics.append(func(ft_from_MCSs, bes['all']))
+            elif func in {ft.phi_d, ft.phi_im, ft.phi_prec, ft.phi_spec, ft.phi_sens, ft.phi_npv, ft.phi_fnr, ft.phi_fpr, ft.phi_acc}:
+                metrics.append(func(dataset))
+            elif func in {ft.phi_r}:
+                metrics.append(func(dataset, seg_size))
+            else:
+                metrics.append(func())
+        else:
+            metrics.append(-1)
+    
+    return (str(ft), metrics)
+
+def compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size=4):
+    print("Starting...")
+    
+    with Pool() as p:
+        results = p.starmap(compute_fitness, [(ft, multi_objective_function, dataset, ft_from_MCSs, bes, seg_size) for ft in initial_population])
+    fitness_dict = {str_ft: metrics for str_ft, metrics in results}
+    fitnesses = np.array([metrics for str_ft, metrics in results])
+    return fitnesses, fitness_dict
 
 #%% Compute metrics
-def compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size=4):
+def compute_metrics_fts1(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size=4):
     
     #show us initial population
     fitnesses = []

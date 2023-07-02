@@ -1,3 +1,4 @@
+import math
 from ft_learn.ft.ft_elements import BE, AND, OR, VOT
 import ft_learn.helper as helper
 import numpy as np
@@ -200,6 +201,9 @@ class FaultTree:
         else:
             return False
 
+    def __hash__(self):
+        return hash(self.to_string(include_names=False))
+    
     def __str__(self):
         return self.to_string(include_names=False)
 
@@ -466,31 +470,6 @@ class FaultTree:
         return self.count_connections()
         # return len(self.get_all_bes()) + len(helper.get_gate_statistics(self))
 
-    def phi_r(self,dataset):
-        shuffled_dataset = np.copy(dataset)
-        np.random.shuffle(shuffled_dataset)
-        segment_size = 8
-        segment_count = 0
-        segment_count_true = 0
-        total_counts = 0
-        total_counts_true = 0
-        for data in shuffled_dataset:
-            if (segment_count == segment_size):
-                if (segment_count_true == segment_size):
-                    total_counts_true += 1
-                total_counts += 1
-                segment_count = 0
-                segment_count_true = 0
-            if data['T'] == self.evaluate(data):
-                segment_count_true += 1
-            segment_count += 1
-        if (segment_count == segment_size):
-            if (segment_count_true == segment_size):
-                total_counts_true += 1
-            total_counts += 1
-            segment_count = 0
-        return 1 - total_counts_true / (total_counts)
-    
     def get_unique_list_bes(self):
         bes = []
         for i in self.get_all_bes(): 
