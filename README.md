@@ -1,9 +1,3 @@
-# Inference of fault tree models
+# FT-MOEA-CM
 
-The approaches presented here aim to infer fault tree models from given failure data sets.
-
-## Repository overview
-
-This repository contains the following folders corresponding to different approaches:
-- [ft_moea](ft_moea) contains the code and results for the *FT-MOEA*, an algorithm inferring fault tree models using multi-objective evolutionary algorithms.
-- [symlearn](symlearn) contains the code and results for *SymLearn*, an inference algorithm using symmetries and modules.
+The approach presented in this algorithm aims to infer fault tree models from given failure data sets. Based on the implementation of [FT-MOEA](https://gitlab.utwente.nl/fmt/fault-trees/ft-moea), FT-MOEA-CM introduces the use of confusion matrix metrics instead of metrics based on Minimal Cut Sets. Additionally, it introduces the use of parallel computation to leverage the availability of multiple CPUs.
