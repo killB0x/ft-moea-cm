@@ -12,13 +12,7 @@ class FaultTree:
     """
     Simple representation of fault trees.
     """
-    TP = None
-    FP = None
-    TN = None
-    FN = None
-    P = None
-    N = None
-
+    
     def __init__(self, top_event, name=""):
         """
         Constructor.
@@ -27,6 +21,13 @@ class FaultTree:
         """
         self.top_event = top_event
         self.name = name
+        self.TP = None
+        self.FP = None
+        self.TN = None
+        self.FN = None
+        self.P = None
+        self.N = None
+        self.prev_operation = None
 
     def copy(self, allow_duplicates=False):
         """
@@ -108,6 +109,12 @@ class FaultTree:
 
         return FaultTree(construct_children(flat_representation))
 
+    def add_to_history(self,operation):
+        self.prev_operation = operation
+    
+    def get_perv_operation(self):
+        return self.prev_operation
+    
     def remove_gate(self, gate):
         """
         Remove gate from fault tree and update parent/children relations.
@@ -193,7 +200,7 @@ class FaultTree:
                 return s + "\n" + "\n".join(children)
 
         return iter_parents(self.top_event)
-
+    
     def __eq__(self, other):
         if isinstance(other, FaultTree):
             # Only compare the structure but not the naming of the gates
@@ -805,9 +812,11 @@ def save_results(raw_fts,t,path_save_results,dataset,ft_from_MCSs,multi_objectiv
 
     str_fts_sorted = []
     str_fts_sorted_trimmed = []
+    operations = []
     #fts_sorted_trimmed = []
     for i in raw_fts[0]:
         str_fts_sorted.append(str(i))
+        operations.append(i.prev_operation)
         #fts_sorted_trimmed.append(trim_ft(str2ft(str(i))))
         #str_fts_sorted_trimmed.append(str(fts_sorted_trimmed[-1]))
         
@@ -822,5 +831,5 @@ def save_results(raw_fts,t,path_save_results,dataset,ft_from_MCSs,multi_objectiv
     num_files_dir = int(len(files_in_folder))
     saving_dir = path_save_results + '/' + 'gen_' + str(num_files_dir)
     #mdic = {'metrics_fts': raw_fts[1],'metrics_fts_trimmed':fitnesses_trimmed,'fts':str_fts_sorted,'fts_trimmed':str_fts_sorted_trimmed,'time':t}
-    mdic = {'metrics_fts': raw_fts[1],'fts':str_fts_sorted,'time':t}
+    mdic = {'metrics_fts': raw_fts[1],'fts':str_fts_sorted,'time':t, 'operation': operations}
     savemat(saving_dir+'.mat', mdic)

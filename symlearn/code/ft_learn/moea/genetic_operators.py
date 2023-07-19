@@ -393,6 +393,7 @@ def operate_on_ft(ft, population, all_bes, prob_config, deterministic=False):
                 new_ft, new_ft_2 = action(ft, random.choice(population), prob_action, deterministic)
                 if not helper.check_empty_objects(new_ft_2):
                     if new_ft_2 not in new_population:
+                        new_ft_2.add_to_history(action.__name__)
                         new_population.append(new_ft_2)
             elif action == create_be:
                 new_ft = action(ft, all_bes, prob_action, deterministic)
@@ -403,6 +404,8 @@ def operate_on_ft(ft, population, all_bes, prob_config, deterministic=False):
             new_ft = None
 
         if new_ft and not helper.check_empty_objects(new_ft):
+                # print(new_ft.operation_history)
+                new_ft.add_to_history(action.__name__)
                 new_population.append(new_ft)
 
     return new_population, assert_errors
