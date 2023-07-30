@@ -496,6 +496,34 @@ def delete_str_index(string, indices):
     for i in sorted(indices, key=abs, reverse=True):
         del z[i]
     return z.decode()
+
+def mcsInit(ft1, bes, dataset):
+    ft = str2ft(ft1)
+    mcs = helper.getMCSs(helper.cutsets_from_ft(ft, bes['all']))
+    basic_events = {}
+    for i,be in enumerate(bes['all']):
+        basic_events[i] = BE(be)
+        
+    gates = {}
+    for i,set in enumerate(mcs):
+        gates[i]=[]
+        for j,x in enumerate(mcs[i]):
+            if x==1:
+                gates[i].append(basic_events[j])
+        
+    for i in gates:
+        gates[i] = AND(gates[i])
+    
+    finalOr = []
+    for i in gates:
+        finalOr.append(gates[i])
+    
+    mcsTree = FaultTree(OR(finalOr))
+    basic_events = [BE(be) for be in bes['all']]
+    orTree = FaultTree(OR(deepcopy(basic_events)))
+    andTree = FaultTree(AND(deepcopy(basic_events)))
+    print("ACC?", mcsTree.phi_d(dataset))
+    return [mcsTree, orTree, andTree]
 # %% Create FT object
 def str2ft(ft1):
     

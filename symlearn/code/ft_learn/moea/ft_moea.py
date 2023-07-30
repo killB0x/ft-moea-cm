@@ -6,7 +6,7 @@ import random
 import time
 import math
 
-from ft_learn.ft.fault_tree import FaultTree, str2ft
+from ft_learn.ft.fault_tree import FaultTree, str2ft, mcsInit
 from ft_learn.ft.fault_tree import save_results
 from ft_learn.ft.ft_elements import BE, AND, OR
 import ft_learn.helper as helper
@@ -102,12 +102,19 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
 
     # Create the initial population:
     print("create initial population")
+    ft_as_input1 = 'OR(BE12,OR(BE12,OR(AND(BE7,BE8,BE10),AND(BE5,OR(BE8,BE1),BE2,BE12)),AND(BE5,BE1,BE3), OR(BE12, OR(AND(BE2, BE5, BE4)))), OR(BE12, AND(BE2, BE5, BE4), OR(AND(OR(OR(BE12, AND(BE5, OR(BE2, OR(BE1))), AND(BE6, OR(BE10, BE11))), BE12, AND(BE11, BE9, AND(BE7)), OR(BE12, AND(BE7, OR(BE11, BE10)), AND(BE6, BE10))), OR(AND(BE5, OR(BE2, BE1), BE4), AND(OR(BE12, OR(BE11, BE10), BE5), OR(BE12, AND(OR(BE6, BE12, AND(BE7, OR(BE11, BE10))), AND(OR(BE8, BE9, BE12), AND(OR(BE7, BE6), OR(BE11, BE10)))), OR(BE12, AND(BE2, BE5, BE3)))))), BE12))'
+    ft_as_input2 = 'OR(BE8, BE4, AND(BE9, OR(BE7, BE10, BE6, BE5)), OR(BE8, BE4, AND(OR(BE6, BE3, OR(BE10, BE6, BE8, BE1)), AND(OR(BE8, BE9, BE5, OR(BE5, AND(BE7))), OR(BE6, BE2, OR(BE10))))))'
+    # print("scoop", mcsInit(ft_as_input2, bes)[0])
+    # print("scoop", mcsInit(ft_as_input2, bes)[1])
+    # print("scoop", mcsInit(ft_as_input2, bes)[2])
     if ft_as_input == '':
         # Linard's (2019)
         initial_population = generate_initial_population(basic_events)
     else:
         initial_population = [str2ft(ft_as_input)]
-
+        
+    # initial_population = mcsInit(ft_as_input2, bes, dataset)
+    print("pop", initial_population)
     # ------------------------------------
     while len(initial_population) < population_size:
         initial_population = genetic_operators.apply_genetic_operators(initial_population, basic_events, config_gen_op, debugging)
