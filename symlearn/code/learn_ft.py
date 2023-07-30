@@ -66,7 +66,7 @@ class Config:
         # Stop after not changing in generations
         self.unchanged_generations = 20
         # Multi-objective function: [phi_c (Accuracy MCS), phi_s (Size), phi_d (Accuracy data)]
-        self.obj_functions = [1,1,1,0,0,0,0,0,0,0,0,0]
+        self.obj_functions = [1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         # Selection strategy
         self.selection_strategy = 'elitist'
         # Saving folder
@@ -398,7 +398,7 @@ if __name__ == "__main__":
     parser.add_argument('--verbose', '-v', help='Enable verbose output', action='store_true')
     parser.add_argument('--debug', '-d', help='Enable debugging', action='store_true')
     parser.add_argument('--segment-size', '-sz',type=int, help='Set segment size for random segmentation', default='4')
-    parser.add_argument('--metric-config','-mc', type=str, help='Set metric configuration', default="111000000000")
+    parser.add_argument('--metric-config','-mc', type=str, help='Set metric configuration', default="11100000000000000000000")
 
     args = parser.parse_args()
 

@@ -336,6 +336,121 @@ class FaultTree:
         
         return 1 - (self.TP + self.TN) / (self.P + self.N) 
 
+    def phi_ts(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return 1 - (self.TP) / (self.TP + self.FN + self.FP) 
+    
+    def phi_bacc(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return 1 - (self.TP/self.P + self.TN/self.N) / 2 
+    
+    def phi_F1(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        return 1 - (2*self.TP/(2*self.TP + self.FN + self.FP)) 
+    
+    def phi_mcc(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        
+        numerator = (self.TP * self.TN) - (self.FP * self.FN)
+        denominator = (
+            (self.TP + self.FP) * 
+            (self.TP + self.FN) * 
+            (self.TN + self.FP) * 
+            (self.TN + self.FN)
+        ) ** 0.5
+        
+        # To prevent division by zero
+        if denominator == 0:
+            return 2
+        
+        return 1 - numerator / denominator
+    
+    def phi_fm(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+            
+        ppv = self.TP / (self.TP + self.FP) if (self.TP + self.FP) != 0 else 0
+        tpr = self.TP / (self.TP + self.FN) if (self.TP + self.FN) != 0 else 0
+        
+        # Return FMI
+        return 1 - (ppv * tpr) ** 0.5
+    
+    def phi_inform(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+            
+        sensitivity = self.TP / (self.TP + self.FN) if (self.TP + self.FN) != 0 else 0
+        specificity = self.TN / (self.TN + self.FP) if (self.TN + self.FP) != 0 else 0
+        
+        return 1 - (sensitivity + specificity - 1)
+    
+    def phi_marked(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+            
+        ppv = self.TP / (self.TP + self.FP) if (self.TP + self.FP) != 0 else 0
+        npv = self.TN / (self.TN + self.FN) if (self.TN + self.FN) != 0 else 0
+        
+        return 1 - (ppv + npv - 1)
+    
+    def phi_nlr(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+            
+        fnr = self.FN / (self.TP + self.FN) if (self.TP + self.FN) != 0 else 0
+        tnr = self.TN / (self.TN + self.FP) if (self.TN + self.FP) != 0 else 0
+        return fnr / tnr if tnr != 0 else float('inf')
+    
+    def phi_npr(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+            
+        sensitivity = self.TP / (self.TP + self.FN) if (self.TP + self.FN) != 0 else 0
+        specificity = self.TN / (self.TN + self.FP) if (self.TN + self.FP) != 0 else 0
+        denominator = 1 - specificity
+        lr_plus = sensitivity / denominator if denominator != 0 else float('inf')
+    
+        return 1 / lr_plus if lr_plus != 0 else 0
+    
+    def phi_dor(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+        # Compute sensitivity and specificity
+        sensitivity = self.TP / (self.TP + self.FN) if (self.TP + self.FN) != 0 else 0
+        specificity = self.TN / (self.TN + self.FP) if (self.TN + self.FP) != 0 else 0
+        
+        # Compute Positive and Negative Likelihood Ratios
+        lr_plus_denominator = 1 - specificity
+        lr_plus = sensitivity / lr_plus_denominator if lr_plus_denominator != 0 else float('inf')
+        
+        lr_minus_numerator = 1 - sensitivity
+        lr_minus = lr_minus_numerator / specificity if specificity != 0 else float('inf')
+        
+        # Compute DOR and its inverse
+        dor = lr_plus / lr_minus if lr_minus != 0 else float('inf')
+        minimized_dor_value = 1 / dor if dor != 0 else 0
+
+        return minimized_dor_value
+    
+    def phi_kappa(self, dataset):
+        if self.N == None:
+            self.compute_confusion_matrix_attributes(dataset)
+            
+        po = (self.TP + self.TN) / (self.TP + self.TN + self.FP + self.FN)
+        
+        # Expected agreement by chance
+        pe = ((self.TP + self.FN) * (self.TP + self.FP) + 
+              (self.FP + self.TN) * (self.FN + self.TN)) / (self.TP + self.TN + self.FP + self.FN)**2
+        
+        return 1 - (po - pe) / (1 - pe)
+        
     def phi_im(self, dataset):
         total_T_dataset = sum(row['T'] for row in dataset)
         total_T_ft = 0

@@ -147,15 +147,42 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
             save_results(raw_fts,t[-1]-t[0],path_save_results,dataset,ft_from_MCSs,multi_objective_function)
         
         dict_iterations.append([str(raw_fts[0][-1])] + np.mean(raw_fts[1],axis=0).tolist() + raw_fts[1][-1].tolist()  )
-        print(str(i),'\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),', ϕ_d=',"{:.4f}".format(np.mean(raw_fts[1][:,2])),', ϕ_r=',"{:.4f}".format(np.mean(raw_fts[1][:,3])),', ϕ_im=',"{:.4f}".format(np.mean(raw_fts[1][:,4])),'\t /  ϕ_c=',"{:.4f}".format(raw_fts[1][-1,0]),', ϕ_acc=',"{:.4f}".format(np.mean(raw_fts[1][-1,11])),', ϕ_d=',"{:.4f}".format(raw_fts[1][-1,2]),', ϕ_r=',"{:.4f}".format(raw_fts[1][-1,3]),', ϕ_im=',"{:.4f}".format(raw_fts[1][-1,4]), ', ϕ_prec=',"{:.4f}".format(raw_fts[1][-1,5]), ', ϕ_spec=',"{:.4f}".format(raw_fts[1][-1,6]),', ϕ_sens=',"{:.4f}".format(raw_fts[1][-1,7]),', ϕ_npv=',"{:.4f}".format(raw_fts[1][-1,8]),', ϕ_fnr=',"{:.4f}".format(raw_fts[1][-1,9]),', ϕ_fpr=',"{:.4f}".format(raw_fts[1][-1,10]), ', ϕ_s=',"{:.2f}".format(raw_fts[1][-1,1]),'elapsed_time=',"{:.2f}".format(time.time()-start_t),'\t',raw_fts[0][-1])
+        print(str(i),'\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),
+              ', ϕ_d=',"{:.4f}".format(np.mean(raw_fts[1][:,2])),
+              ', ϕ_r=',"{:.4f}".format(np.mean(raw_fts[1][:,3])),
+              ', ϕ_im=',"{:.4f}".format(np.mean(raw_fts[1][:,4])),
+              '\t /  ϕ_c=',"{:.4f}".format(raw_fts[1][-1,0]),
+              ', ϕ_acc=',"{:.4f}".format(np.mean(raw_fts[1][-1,11])),
+              ', ϕ_d=',"{:.4f}".format(raw_fts[1][-1,2]),', ϕ_r=',
+              "{:.4f}".format(raw_fts[1][-1,3]),', ϕ_im=',"{:.4f}".format(raw_fts[1][-1,4]), 
+              ', ϕ_prec=',"{:.4f}".format(raw_fts[1][-1,5]), 
+              ', ϕ_spec=',"{:.4f}".format(raw_fts[1][-1,6]),
+              ', ϕ_sens=',"{:.4f}".format(raw_fts[1][-1,7]),
+              ', ϕ_npv=',"{:.4f}".format(raw_fts[1][-1,8]),
+              ', ϕ_fnr=',"{:.4f}".format(raw_fts[1][-1,9]),
+              ', ϕ_fpr=',"{:.4f}".format(raw_fts[1][-1,10]), 
+              ', ϕ_s=',"{:.2f}".format(raw_fts[1][-1,1]),
+              ', ϕ_ts=',"{:.4f}".format(np.mean(raw_fts[1][-1,12])),
+              ', ϕ_bacc=',"{:.4f}".format(np.mean(raw_fts[1][-1,13])),
+              ', ϕ_F1=',"{:.4f}".format(np.mean(raw_fts[1][-1,14])),
+              ', ϕ_mcc=',"{:.4f}".format(np.mean(raw_fts[1][-1,15])),
+              ', ϕ_fm=',"{:.4f}".format(np.mean(raw_fts[1][-1,16])),
+              ', ϕ_informed=',"{:.4f}".format(np.mean(raw_fts[1][-1,17])),
+              ', ϕ_marked=',"{:.4f}".format(np.mean(raw_fts[1][-1,18])),
+              ', ϕ_kappa=',"{:.4f}".format(np.mean(raw_fts[1][-1,19])),
+              ', ϕ_nlr=',"{:.4f}".format(np.mean(raw_fts[1][-1,20])),
+              ', ϕ_npr=',"{:.4f}".format(np.mean(raw_fts[1][-1,21])),
+              ', ϕ_dor=',"{:.4f}".format(np.mean(raw_fts[1][-1,22])),
+              'elapsed_time=',"{:.2f}".format(time.time()-start_t),'\t',raw_fts[0][-1])
 
         # ------------------------------
         # Convergence criteria:
 
         objectives = [i for i in range(len(multi_objective_function)) if multi_objective_function[i] != 0]
         conv += 1
+        obj_offset = len(multi_objective_function) + 1
         for objective_type in objectives:
-            if (dict_iterations[-2][objective_type + 13] != dict_iterations[-1][objective_type + 13]):
+            if (dict_iterations[-2][objective_type + obj_offset] != dict_iterations[-1][objective_type + obj_offset]):
                 conv = 0       
         if conv >= convergence_criterion-1: #or ( dict_iterations[-1][4] == 1.0 and dict_iterations[-1][6] == 1.0 ):
             print('... FT-MOEA finalized ...')

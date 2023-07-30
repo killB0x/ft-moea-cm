@@ -90,12 +90,12 @@ def fitness_cutsets(ft1, cs_base, bes):
 def compute_fitness(ft, multi_objective_function, dataset, ft_from_MCSs, bes, seg_size):
     metrics = []
     
-    metrics_funcs = [ft.phi_c, ft.phi_s, ft.phi_d, ft.phi_r, ft.phi_im, ft.phi_prec, ft.phi_spec, ft.phi_sens, ft.phi_npv, ft.phi_fnr, ft.phi_fpr, ft.phi_acc]
+    metrics_funcs = [ft.phi_c, ft.phi_s, ft.phi_d, ft.phi_r, ft.phi_im, ft.phi_prec, ft.phi_spec, ft.phi_sens, ft.phi_npv, ft.phi_fnr, ft.phi_fpr, ft.phi_acc, ft.phi_ts, ft.phi_bacc, ft.phi_F1, ft.phi_mcc, ft.phi_fm, ft.phi_inform, ft.phi_marked, ft.phi_kappa, ft.phi_nlr, ft.phi_npr, ft.phi_dor]
     for i, func in enumerate(metrics_funcs):
         if multi_objective_function[i] != 0:
             if func == ft.phi_c:
                 metrics.append(func(ft_from_MCSs, bes['all']))
-            elif func in {ft.phi_d, ft.phi_im, ft.phi_prec, ft.phi_spec, ft.phi_sens, ft.phi_npv, ft.phi_fnr, ft.phi_fpr, ft.phi_acc}:
+            elif func in {ft.phi_d, ft.phi_im, ft.phi_prec, ft.phi_spec, ft.phi_sens, ft.phi_npv, ft.phi_fnr, ft.phi_fpr, ft.phi_acc,ft.phi_ts, ft.phi_bacc, ft.phi_F1, ft.phi_mcc, ft.phi_fm,ft.phi_inform, ft.phi_marked, ft.phi_kappa, ft.phi_nlr, ft.phi_npr, ft.phi_dor}:
                 metrics.append(func(dataset))
             elif func in {ft.phi_r}:
                 metrics.append(func(dataset, seg_size))
