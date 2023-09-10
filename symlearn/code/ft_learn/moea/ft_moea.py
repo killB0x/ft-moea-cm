@@ -56,10 +56,36 @@ def upload_results(run_id,  dataset, tree_list, attribute_data, is_multithreadin
         "time": time,
     }
 
-    url = 'http://localhost:8080/evolutionary_data'
+    headers = {
+        'X-API-Key': 'key3'
+    }
+    
+    url = 'http://13.80.52.149:8080/evolutionary_data'
 
     # Sending the POST request
-    response = requests.post(url, json=data)
+    response = requests.post(url, json=data, headers=headers)
+
+    # Checking the response
+    if response.status_code == 200:
+        print("Successfully sent POST request")
+        print("Response:", response.text)
+    else:
+        print(f"Failed to send POST request, status code: {response.status_code}")
+
+def send_end_of_run_signal(run_id):
+    
+    headers = {
+        'X-API-Key': 'key4'
+    }
+    # data to be sent
+    data = {
+        "run_id": run_id,
+    }
+
+    url = 'http://13.80.52.149:8080/end_run'
+
+    # Sending the POST request
+    response = requests.post(url, json=data, headers=headers)
 
     # Checking the response
     if response.status_code == 200:
@@ -69,7 +95,7 @@ def upload_results(run_id,  dataset, tree_list, attribute_data, is_multithreadin
         print(f"Failed to send POST request, status code: {response.status_code}")
 
 def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_as_input='', generations=100, convergence_criterion=10, multi_objective_function=[1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           config_gen_op=None, selection_strategy='elitist', saving_results_=0, path_save_results="", debugging=False, seg_size=4):
+                           config_gen_op=None, selection_strategy='elitist', saving_results_=0, path_save_results="", debugging=False, seg_size=4, dataset_name="dataset"):
     """
     Learns a FT consistent with a given dataset, using genetic operations.
     :param dataset: Matrix containing all cut sets.
@@ -155,7 +181,7 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
         #Saving dataset
         save_results(raw_fts,t[-1]-t[0],path_save_results,dataset,ft_from_MCSs,multi_objective_function)
 
-    upload_results(run_id, path_save_results,raw_fts[0], raw_fts[1], False, multi_objective_function, t[-1]-t[0])
+    upload_results(run_id, dataset_name[0] ,raw_fts[0], raw_fts[1], False, multi_objective_function, t[-1]-t[0])
     print('Gen. \t Fitness Pop.             \t Fitness best \t                   Best individual')
     print('0','\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),', ϕ_d=',"{:.4f}".format(np.mean(raw_fts[1][:,2])),', ϕ_r=',"{:.4f}".format(np.mean(raw_fts[1][:,3])),', ϕ_im=',"{:.4f}".format(np.mean(raw_fts[1][:,4])),'\t /  ϕ_c=',"{:.4f}".format(raw_fts[1][-1,0]),', ϕ_acc=',"{:.4f}".format(np.mean(raw_fts[1][-1,11])),', ϕ_d=',"{:.4f}".format(raw_fts[1][-1,2]),', ϕ_r=',"{:.4f}".format(raw_fts[1][-1,3]),', ϕ_im=',"{:.4f}".format(raw_fts[1][-1,4]),', ϕ_prec=',"{:.2f}".format(raw_fts[1][-1,5]), ', ϕ_spec=',"{:.4f}".format(raw_fts[1][-1,6]), ', ϕ_sens=',"{:.4f}".format(raw_fts[1][-1,7]),', ϕ_npv=',"{:.4f}".format(raw_fts[1][-1,8]),', ϕ_fnr=',"{:.4f}".format(raw_fts[1][-1,9]),', ϕ_fpr=',"{:.4f}".format(raw_fts[1][-1,10]), ', ϕ_s=',"{:.2f}".format(raw_fts[1][-1,1]),'elapsed_time=',"{:.2f}".format(time.time()-start_t),'\t',raw_fts[0][-1])
 
@@ -178,8 +204,7 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
         if path_save_results != '':
             #Saving dataset
             save_results(raw_fts,t[-1]-t[0],path_save_results,dataset,ft_from_MCSs,multi_objective_function)
-        
-        upload_results(run_id, path_save_results,raw_fts[0], raw_fts[1], False, multi_objective_function,  t[-1]-t[0])
+        upload_results(run_id, dataset_name[0] ,raw_fts[0], raw_fts[1], False, multi_objective_function,  t[-1]-t[0])
         dict_iterations.append([str(raw_fts[0][-1])] + np.mean(raw_fts[1],axis=0).tolist() + raw_fts[1][-1].tolist()  )
             
         print(str(i),'\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),
@@ -220,6 +245,7 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
             if (dict_iterations[-2][objective_type + obj_offset] != dict_iterations[-1][objective_type + obj_offset]):
                 conv = 0       
         if conv >= convergence_criterion-1: #or ( dict_iterations[-1][4] == 1.0 and dict_iterations[-1][6] == 1.0 ):
+            send_end_of_run_signal(run_id)
             print('... FT-MOEA finalized ...')
             return raw_fts[0], t, raw_fts[1]
         # if multi_objective_function == [-1,-1,-1]:
