@@ -1,10 +1,12 @@
 # TODO: could use revision
 
+import json
 import numpy as np
 from copy import deepcopy
 import random
 import time
 import math
+import requests
 
 from ft_learn.ft.fault_tree import FaultTree, str2ft
 from ft_learn.ft.fault_tree import save_results
@@ -35,7 +37,36 @@ def upfold(saving_folder):
     return saving_folder
 
 
+def upload_results(run_id,  dataset, tree_list, attribute_data, is_multithreading_enabled=0, metric_config='11100000000000000000000', time=-1):
+    processed_trees=[]
+    for i in tree_list:
+        processed_trees.append(str(i))
+    
+    metric_config = [-x for x in metric_config]
+    processed_metric_config = "".join(map(str, metric_config))
+    
+        # data to be sent
+    data = {
+        "run_id": run_id,
+        "dataset": dataset,
+        "trees": processed_trees,
+        "attribute_data": attribute_data.tolist(),
+        "is_multithreading_enabled": is_multithreading_enabled,
+        "metric_config": processed_metric_config,
+        "time": time,
+    }
 
+    url = 'http://localhost:8080/evolutionary_data'
+
+    # Sending the POST request
+    response = requests.post(url, json=data)
+
+    # Checking the response
+    if response.status_code == 200:
+        print("Successfully sent POST request")
+        print("Response:", response.text)
+    else:
+        print(f"Failed to send POST request, status code: {response.status_code}")
 
 def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_as_input='', generations=100, convergence_criterion=10, multi_objective_function=[1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                            config_gen_op=None, selection_strategy='elitist', saving_results_=0, path_save_results="", debugging=False, seg_size=4):
@@ -56,7 +87,8 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
     :param debugging: Whether debugging should be enabled. This option ensures reproducible random generations.
     :return: Consistent fault tree.
     """
-
+    run_id = round(time.time()) * 1000
+    print(run_id)
     print('... FT-MOEA initialized ...')
     
     # Initialize random seed
@@ -123,13 +155,14 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
         #Saving dataset
         save_results(raw_fts,t[-1]-t[0],path_save_results,dataset,ft_from_MCSs,multi_objective_function)
 
+    upload_results(run_id, path_save_results,raw_fts[0], raw_fts[1], False, multi_objective_function, t[-1]-t[0])
     print('Gen. \t Fitness Pop.             \t Fitness best \t                   Best individual')
     print('0','\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),', ϕ_d=',"{:.4f}".format(np.mean(raw_fts[1][:,2])),', ϕ_r=',"{:.4f}".format(np.mean(raw_fts[1][:,3])),', ϕ_im=',"{:.4f}".format(np.mean(raw_fts[1][:,4])),'\t /  ϕ_c=',"{:.4f}".format(raw_fts[1][-1,0]),', ϕ_acc=',"{:.4f}".format(np.mean(raw_fts[1][-1,11])),', ϕ_d=',"{:.4f}".format(raw_fts[1][-1,2]),', ϕ_r=',"{:.4f}".format(raw_fts[1][-1,3]),', ϕ_im=',"{:.4f}".format(raw_fts[1][-1,4]),', ϕ_prec=',"{:.2f}".format(raw_fts[1][-1,5]), ', ϕ_spec=',"{:.4f}".format(raw_fts[1][-1,6]), ', ϕ_sens=',"{:.4f}".format(raw_fts[1][-1,7]),', ϕ_npv=',"{:.4f}".format(raw_fts[1][-1,8]),', ϕ_fnr=',"{:.4f}".format(raw_fts[1][-1,9]),', ϕ_fpr=',"{:.4f}".format(raw_fts[1][-1,10]), ', ϕ_s=',"{:.2f}".format(raw_fts[1][-1,1]),'elapsed_time=',"{:.2f}".format(time.time()-start_t),'\t',raw_fts[0][-1])
 
     dict_iterations.append([str(raw_fts[0][-1])] + np.mean(raw_fts[1], axis=0).tolist() + raw_fts[1][-1].tolist())
     population = raw_fts[0]
     conv = 0
-
+    
     for i in range(1, generations):
         start_t = time.time()
         t.append(time.time())
@@ -146,7 +179,9 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
             #Saving dataset
             save_results(raw_fts,t[-1]-t[0],path_save_results,dataset,ft_from_MCSs,multi_objective_function)
         
+        upload_results(run_id, path_save_results,raw_fts[0], raw_fts[1], False, multi_objective_function,  t[-1]-t[0])
         dict_iterations.append([str(raw_fts[0][-1])] + np.mean(raw_fts[1],axis=0).tolist() + raw_fts[1][-1].tolist()  )
+            
         print(str(i),'\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),
               ', ϕ_d=',"{:.4f}".format(np.mean(raw_fts[1][:,2])),
               ', ϕ_r=',"{:.4f}".format(np.mean(raw_fts[1][:,3])),
