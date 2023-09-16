@@ -134,7 +134,7 @@ def learn_new_fault_tree(mcss, bes, all_bes, config, results, dataset_evaluation
                                            generations=config.max_generations, convergence_criterion=config.unchanged_generations, multi_objective_function=config.obj_functions,
                                            config_gen_op=config.probs_config, selection_strategy=config.selection_strategy, debugging=config.debug,
                                            path_save_results=config.saving_folder,
-                                           ft_as_input=config.ft_as_input, seg_size=config.seg_size)
+                                           ft_as_input=config.ft_as_input, seg_size=config.seg_size, dataset_name=os.path.splitext(os.path.basename(args.file)))
         ft = fts[-1]
     elif config.learn_approach == LearnApproach.SYMPY:
         log_debug("Learn FT via sympy for module {}".format(CutSet(bes.keys()).to_string(bes)), recurse_level)
