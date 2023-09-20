@@ -114,9 +114,12 @@ def compute_fitness(ft, multi_objective_function, dataset, ft_from_MCSs, bes, se
 
 def compute_metrics_fts_multithreaded(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size=4, cache_dictionary={}, use_caching = True):
     print("Starting...")
-    
+    counter = {
+        "cached": 0,
+        "normal": 0
+    }
     with Pool() as p:
-        results = p.starmap(compute_fitness, [(ft, multi_objective_function, dataset, ft_from_MCSs, bes, seg_size, cache_dictionary, use_caching) for ft in initial_population])
+        results = p.starmap(compute_fitness, [(ft, multi_objective_function, dataset, ft_from_MCSs, bes, seg_size, cache_dictionary, counter, use_caching) for ft in initial_population])
     fitness_dict = {str_ft: metrics for str_ft, metrics in results}
     fitnesses = np.array([metrics for str_ft, metrics in results])
     return fitnesses, fitness_dict

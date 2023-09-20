@@ -344,41 +344,19 @@ def apply_genetic_operators(population, all_bes, prob_config, deterministic=Fals
     :param deterministic: Whether deterministic results should be ensured (useful for debugging).
     :return: New population of fault trees.
     """
-    actions = [create_be, connect_be, disconnect_be, delete_be, move_be, create_gate, change_gate_type, delete_gate, cross_over]
-    new_population = []
-    assert_errors = 0
+    results = []
     for ft in population:
-        if ft not in new_population:
-            new_population.append(ft)
+        result = operate_on_ft(ft, population, all_bes, prob_config, deterministic)
+        results.append(result)
 
-        for action in actions:
-            # logging.debug("Performing {} on {}".format(action.__name__, ft))
-            # Get configured probability
-            prob_action = getattr(prob_config, "p_{}".format(action.__name__))
-            # Perform action
-            try:
-                if action == cross_over:
-                    new_ft, new_ft_2 = action(ft, random.choice(population), prob_action, deterministic)
-                    # Add second fault tree as well
-                    if not helper.check_empty_objects(new_ft_2):
-                        if new_ft_2 not in new_population:
-                            new_population.append(new_ft_2)
-                elif action == create_be:
-                    new_ft = action(ft, all_bes, prob_action, deterministic)
-                else:
-                    new_ft = action(ft, prob_action, deterministic)
-            except AssertionError:
-                assert_errors += 1
-                new_ft = None
-
-            if new_ft and not helper.check_empty_objects(new_ft):
-                if new_ft not in new_population:
-                    new_population.append(new_ft)
-                    # logging.debug("Resulting FT: {}".format(new_ft))
-
-    if assert_errors > 0:
-        logging.debug("Encountered {} assertion errors".format(assert_errors))
-
+    new_population = []
+    total_assert_errors = 0
+    for result in results:
+        new_population.extend(result[0])
+        total_assert_errors += result[1]
+    new_population = list(set(new_population))
+    if total_assert_errors > 0:
+        logging.debug("Encountered {} assertion errors".format(total_assert_errors))
     return new_population
 
 def operate_on_ft(ft, population, all_bes, prob_config, deterministic=False):
