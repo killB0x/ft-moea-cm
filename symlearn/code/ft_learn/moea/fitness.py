@@ -87,7 +87,12 @@ def fitness_cutsets(ft1, cs_base, bes):
 
     return c_cos_coef
 
-def compute_fitness(ft, multi_objective_function, dataset, ft_from_MCSs, bes, seg_size):
+def compute_fitness(ft, multi_objective_function, dataset, ft_from_MCSs, bes, seg_size, cache_dictionary, counter, use_caching = True):
+    if str(ft) in cache_dictionary and use_caching:
+        counter["cached"] += 1
+        return cache_dictionary[str(ft)]
+    
+    counter["normal"] += 1
     metrics = []
     
     metrics_funcs = [ft.phi_c, ft.phi_s, ft.phi_d, ft.phi_r, ft.phi_im, ft.phi_prec, ft.phi_spec, ft.phi_sens, ft.phi_npv, ft.phi_fnr, ft.phi_fpr, ft.phi_acc, ft.phi_ts, ft.phi_bacc, ft.phi_F1, ft.phi_mcc, ft.phi_fm, ft.phi_inform, ft.phi_marked, ft.phi_kappa, ft.phi_nlr, ft.phi_npr, ft.phi_dor]
@@ -103,139 +108,48 @@ def compute_fitness(ft, multi_objective_function, dataset, ft_from_MCSs, bes, se
                 metrics.append(func())
         else:
             metrics.append(-1)
-    
+    if use_caching:
+        cache_dictionary[str(ft)] = (str(ft), metrics.copy())
     return (str(ft), metrics)
 
-def compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size=4):
+def compute_metrics_fts_multithreaded(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size=4, cache_dictionary={}, use_caching = True):
     print("Starting...")
     
     with Pool() as p:
-        results = p.starmap(compute_fitness, [(ft, multi_objective_function, dataset, ft_from_MCSs, bes, seg_size) for ft in initial_population])
+        results = p.starmap(compute_fitness, [(ft, multi_objective_function, dataset, ft_from_MCSs, bes, seg_size, cache_dictionary, use_caching) for ft in initial_population])
     fitness_dict = {str_ft: metrics for str_ft, metrics in results}
     fitnesses = np.array([metrics for str_ft, metrics in results])
     return fitnesses, fitness_dict
 
 #%% Compute metrics
-def compute_metrics_fts1(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size=4):
+def compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size=4, cache_dictionary={}, use_caching = True):
+    print("Starting...")
     
-    #show us initial population
-    fitnesses = []
-    fitness_dict = {}
-
-    #Compute accuracy based on the MCS:
-    if multi_objective_function[0] != 0:
-        acc_mcs = []
-        for ft in initial_population:
-            acc_mcs.append([ft.phi_c(ft_from_MCSs,bes['all'])])
-        acc_mcs = np.array(acc_mcs)
-    else:
-        acc_mcs = np.ones((len(initial_population),2))*-1
-        
-    #Compute the size:
-    if multi_objective_function[1] != 0 :
-        tree_size = []
-        for ft in initial_population:
-            #tree_size.append([len(ft.get_all_bes()) + len(get_gate_statistics(ft))])
-            tree_size.append([ft.phi_s()])
-        tree_size = np.array(tree_size)
-    else:
-        tree_size = np.ones((len(initial_population),2))*-1
-    
-    #Compute accuracy based on the dataset:
-    if multi_objective_function[2] != 0:
-        acc_data = []
-        for ft in initial_population:
-            #start_point_time = time.time()
-            acc_data.append([ft.phi_d(dataset)])
-            #print("Calculated confusion matrix for ft in", time.time() - start_point_time, "seconds")
-        acc_data = np.array(acc_data)
-    else:
-        acc_data = np.ones((len(initial_population),2))*-1
-    if multi_objective_function[3] != 0:
-        rand_seg_acc = []
-        for ft in initial_population:
-            rand_seg_acc.append([ft.phi_r(dataset, seg_size)])
-        rand_seg_acc = np.array(rand_seg_acc)
-    else:
-        rand_seg_acc = np.ones((len(initial_population),2))*-1
-
-    if multi_objective_function[4] != 0:
-        im_data = []
-        for ft in initial_population:
-            im_data.append([ft.phi_im(dataset)])
-        im_data = np.array(im_data)
-    else:
-        im_data = np.ones((len(initial_population),2))*-1
-
-    if multi_objective_function[5] != 0:
-        prec_data = []
-        for ft in initial_population:
-            prec_data.append([ft.phi_prec(dataset)])
-        prec_data = np.array(prec_data)
-    else:
-        prec_data = np.ones((len(initial_population),2))*-1
-
-    if multi_objective_function[6] != 0:
-        spec_data = []
-        for ft in initial_population:
-            spec_data.append([ft.phi_spec(dataset)])
-        spec_data = np.array(spec_data)
-    else:
-        spec_data = np.ones((len(initial_population),2))*-1
-
-    if multi_objective_function[7] != 0:
-        sens_data = []
-        for ft in initial_population:
-            sens_data.append([ft.phi_sens(dataset)])
-        sens_data = np.array(sens_data)
-    else:
-        sens_data = np.ones((len(initial_population),2))*-1
-
-    if multi_objective_function[8] != 0:
-        npv_data = []
-        for ft in initial_population:
-            npv_data.append([ft.phi_npv(dataset)])
-        npv_data = np.array(npv_data)
-    else:
-        npv_data = np.ones((len(initial_population),2))*-1
-    
-    if multi_objective_function[9] != 0:
-        fnr_data = []
-        for ft in initial_population:
-            fnr_data.append([ft.phi_fnr(dataset)])
-        fnr_data = np.array(fnr_data)
-    else:
-        fnr_data = np.ones((len(initial_population),2))*-1
-
-    if multi_objective_function[10] != 0:
-        fpr_data = []
-        for ft in initial_population:
-            fpr_data.append([ft.phi_fpr(dataset)])
-        fpr_data = np.array(fpr_data)
-    else:
-        fpr_data = np.ones((len(initial_population),2))*-1
-    
-    if multi_objective_function[11] != 0:
-        acc_single_data = []
-        for ft in initial_population:
-            acc_single_data.append([ft.phi_acc(dataset)])
-        acc_single_data = np.array(acc_single_data)
-    else:
-        acc_single_data = np.ones((len(initial_population),2))*-1
-
-    fitnesses = np.column_stack((acc_mcs[:,0],tree_size[:,0],acc_data[:,0], rand_seg_acc[:,0], im_data[:, 0], prec_data[:, 0], spec_data[:, 0], sens_data[:, 0], npv_data[:, 0], fnr_data[:, 0], fpr_data[:, 0], acc_single_data[:, 0]))
-    for ft,fi1 in zip(initial_population,fitnesses):
-        fitness_dict[str(ft)]  = fi1
+    results = []
+    counter = {
+        "cached": 0,
+        "normal": 0
+    }
+    for ft in initial_population:
+        result = compute_fitness(ft, multi_objective_function, dataset, ft_from_MCSs, bes, seg_size, cache_dictionary, counter, use_caching)
+        results.append(result)
+    # print("Results", results)
+    print("cached", counter["cached"], "normal", counter["normal"])
+    fitness_dict = {str_ft: metrics for str_ft, metrics in results}
+    fitnesses = np.array([metrics for str_ft, metrics in results])
     
     return fitnesses, fitness_dict
 
 
 # %% Fitness function
-def cost_function(initial_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function, seg_size=4):
+def cost_function(initial_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function, seg_size=4, cache_dictionary={}, use_multithreading = True, use_caching = True):
     
     
     # Compute the metrics from the FTs
-    fitnesses,fitness_dict = compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size)
+    if use_multithreading:
+        fitnesses,fitness_dict = compute_metrics_fts_multithreaded(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size, cache_dictionary, use_caching)
+    else:
+        fitnesses,fitness_dict = compute_metrics_fts(initial_population,dataset,ft_from_MCSs,multi_objective_function,bes, seg_size, cache_dictionary, use_caching)
 
     # ------------------------------------------------
     # Pareto efficiency:

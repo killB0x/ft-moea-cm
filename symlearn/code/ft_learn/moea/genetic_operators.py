@@ -335,7 +335,7 @@ class GenOpConfig:
         self.p_cross_over = default_prob
 
 
-def apply_genetic_operators1(population, all_bes, prob_config, deterministic=False):
+def apply_genetic_operators(population, all_bes, prob_config, deterministic=False):
     """
     Apply genetic operators on fault-tree population.
     :param population: Population of fault tree.
@@ -410,7 +410,7 @@ def operate_on_ft(ft, population, all_bes, prob_config, deterministic=False):
 
     return new_population, assert_errors
 
-def apply_genetic_operators(population, all_bes, prob_config, deterministic=False):
+def apply_genetic_operators_multithreaded(population, all_bes, prob_config, deterministic=False):
     with Pool() as p:
         results = p.starmap(operate_on_ft, [(ft, population, all_bes, prob_config, deterministic) for ft in population])
 

@@ -60,7 +60,7 @@ def upload_results(run_id,  dataset, tree_list, attribute_data, is_multithreadin
         'X-API-Key': 'key3'
     }
     
-    url = 'http://13.80.52.149:8080/evolutionary_data'
+    url = 'http://127.0.0.1:8080/evolutionary_data'
 
     # Sending the POST request
     response = requests.post(url, json=data, headers=headers)
@@ -82,7 +82,7 @@ def send_end_of_run_signal(run_id):
         "run_id": run_id,
     }
 
-    url = 'http://13.80.52.149:8080/end_run'
+    url = 'http://127.0.0.1:8080/end_run'
 
     # Sending the POST request
     response = requests.post(url, json=data, headers=headers)
@@ -95,7 +95,8 @@ def send_end_of_run_signal(run_id):
         print(f"Failed to send POST request, status code: {response.status_code}")
 
 def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_as_input='', generations=100, convergence_criterion=10, multi_objective_function=[1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           config_gen_op=None, selection_strategy='elitist', saving_results_=0, path_save_results="", debugging=False, seg_size=4, dataset_name="dataset"):
+                           config_gen_op=None, selection_strategy='elitist', saving_results_=0, path_save_results="", debugging=False, seg_size=4, dataset_name=["dataset"], use_multithreading = True,
+                           use_caching = True):
     """
     Learns a FT consistent with a given dataset, using genetic operations.
     :param dataset: Matrix containing all cut sets.
@@ -113,8 +114,12 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
     :param debugging: Whether debugging should be enabled. This option ensures reproducible random generations.
     :return: Consistent fault tree.
     """
+    
+    cache_dictionary = {}
+    
     run_id = round(time.time()) * 1000
     print(run_id)
+    print(dataset_name)
     print('... FT-MOEA initialized ...')
     
     # Initialize random seed
@@ -168,12 +173,15 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
 
     # ------------------------------------
     while len(initial_population) < population_size:
-        initial_population = genetic_operators.apply_genetic_operators(initial_population, basic_events, config_gen_op, debugging)
+        if use_multithreading:
+            initial_population = genetic_operators.apply_genetic_operators_multithreaded(initial_population, basic_events, config_gen_op, debugging)
+        else:
+            initial_population = genetic_operators.apply_genetic_operators(initial_population, basic_events, config_gen_op, debugging)
 
     t.append(time.time())
     start_t = time.time()
     print("start fitness function")
-    raw_fts = fitness.cost_function(initial_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function, seg_size)
+    raw_fts = fitness.cost_function(initial_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function, seg_size, cache_dictionary, use_multithreading, use_caching)
 
     # sortedPeople,fitnesses,fitness_dict
 
@@ -184,7 +192,6 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
     upload_results(run_id, dataset_name[0] ,raw_fts[0], raw_fts[1], False, multi_objective_function, t[-1]-t[0])
     print('Gen. \t Fitness Pop.             \t Fitness best \t                   Best individual')
     print('0','\t    ϕ_c=',"{:.4f}".format(np.mean(raw_fts[1][:,0])),', ϕ_d=',"{:.4f}".format(np.mean(raw_fts[1][:,2])),', ϕ_r=',"{:.4f}".format(np.mean(raw_fts[1][:,3])),', ϕ_im=',"{:.4f}".format(np.mean(raw_fts[1][:,4])),'\t /  ϕ_c=',"{:.4f}".format(raw_fts[1][-1,0]),', ϕ_acc=',"{:.4f}".format(np.mean(raw_fts[1][-1,11])),', ϕ_d=',"{:.4f}".format(raw_fts[1][-1,2]),', ϕ_r=',"{:.4f}".format(raw_fts[1][-1,3]),', ϕ_im=',"{:.4f}".format(raw_fts[1][-1,4]),', ϕ_prec=',"{:.2f}".format(raw_fts[1][-1,5]), ', ϕ_spec=',"{:.4f}".format(raw_fts[1][-1,6]), ', ϕ_sens=',"{:.4f}".format(raw_fts[1][-1,7]),', ϕ_npv=',"{:.4f}".format(raw_fts[1][-1,8]),', ϕ_fnr=',"{:.4f}".format(raw_fts[1][-1,9]),', ϕ_fpr=',"{:.4f}".format(raw_fts[1][-1,10]), ', ϕ_s=',"{:.2f}".format(raw_fts[1][-1,1]),'elapsed_time=',"{:.2f}".format(time.time()-start_t),'\t',raw_fts[0][-1])
-
     dict_iterations.append([str(raw_fts[0][-1])] + np.mean(raw_fts[1], axis=0).tolist() + raw_fts[1][-1].tolist())
     population = raw_fts[0]
     conv = 0
@@ -198,8 +205,11 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
             new_population = []
             st = 1
             while len(new_population) < population_size:
-                new_population = genetic_operators.apply_genetic_operators(population, basic_events, config_gen_op, debugging)
-            raw_fts = fitness.cost_function(new_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function)
+                if use_multithreading:
+                    new_population = genetic_operators.apply_genetic_operators_multithreaded(population, basic_events, config_gen_op, debugging)
+                else:
+                    new_population = genetic_operators.apply_genetic_operators(population, basic_events, config_gen_op, debugging)
+            raw_fts = fitness.cost_function(new_population, dataset, bes, population_size, ft_from_MCSs, multi_objective_function,seg_size, cache_dictionary, use_multithreading, use_caching)
 
         if path_save_results != '':
             #Saving dataset
@@ -235,6 +245,7 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
               ', ϕ_dor=',"{:.4f}".format(np.mean(raw_fts[1][-1,22])),
               'elapsed_time=',"{:.2f}".format(time.time()-start_t),'\t',raw_fts[0][-1])
 
+        print('cache size', len(cache_dictionary))
         # ------------------------------
         # Convergence criteria:
 
@@ -246,6 +257,7 @@ def perform_genetic_ftmoea(dataset=[], MCSs=[], bes=[], population_size=100, ft_
                 conv = 0       
         if conv >= convergence_criterion-1: #or ( dict_iterations[-1][4] == 1.0 and dict_iterations[-1][6] == 1.0 ):
             send_end_of_run_signal(run_id)
+            print('cached', cache_dictionary)
             print('... FT-MOEA finalized ...')
             return raw_fts[0], t, raw_fts[1]
         # if multi_objective_function == [-1,-1,-1]:

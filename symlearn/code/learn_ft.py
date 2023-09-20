@@ -134,7 +134,9 @@ def learn_new_fault_tree(mcss, bes, all_bes, config, results, dataset_evaluation
                                            generations=config.max_generations, convergence_criterion=config.unchanged_generations, multi_objective_function=config.obj_functions,
                                            config_gen_op=config.probs_config, selection_strategy=config.selection_strategy, debugging=config.debug,
                                            path_save_results=config.saving_folder,
-                                           ft_as_input=config.ft_as_input, seg_size=config.seg_size, dataset_name=os.path.splitext(os.path.basename(args.file)))
+                                           ft_as_input=config.ft_as_input, seg_size=config.seg_size, dataset_name=os.path.splitext(os.path.basename(args.file)),
+                                           use_multithreading = config.use_multithreading,
+                                           use_caching = config.use_caching)
         ft = fts[-1]
     elif config.learn_approach == LearnApproach.SYMPY:
         log_debug("Learn FT via sympy for module {}".format(CutSet(bes.keys()).to_string(bes)), recurse_level)
@@ -394,6 +396,8 @@ if __name__ == "__main__":
     parser.add_argument('--disable-symmetries', help='Disable use of symmetries', action='store_true')
     parser.add_argument('--disable-modules', help='Disable use of modules', action='store_true')
     parser.add_argument('--disable-recursion', help='Disable recursive calls during learning', action='store_true')
+    parser.add_argument('--disable-multithreading', help='Disable use of multiple CPU cores', action='store_true')
+    parser.add_argument('--disable-caching', help='Disable caching of fault tree metrics', action='store_true')
     parser.add_argument('--result-dir', '-r', type=str, help='Directory to write the results into as matlab files.')
     parser.add_argument('--verbose', '-v', help='Enable verbose output', action='store_true')
     parser.add_argument('--debug', '-d', help='Enable debugging', action='store_true')
@@ -412,6 +416,8 @@ if __name__ == "__main__":
     config.use_symmetries = not args.disable_symmetries
     config.use_modules = not args.disable_modules
     config.use_recursion = not args.disable_recursion
+    config.use_multithreading = not args.disable_multithreading
+    config.use_caching = not args.disable_caching
     config.seg_size = args.segment_size
     config.obj_functions = [int(char) for char in args.metric_config]
     print(config.seg_size, config.obj_functions)
